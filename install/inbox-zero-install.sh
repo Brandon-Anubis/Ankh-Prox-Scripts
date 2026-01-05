@@ -203,7 +203,7 @@ echo -e "${INFO}${YW}━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # Ask user if they want to attempt start now
-read -r -p "Would you like to start the containers now? (Will fail login if keys aren't set) [y/N] " prompt
+read -r -p "${TAB3}Would you like to start the containers now? (Will fail login if keys aren't set) <y/N> " prompt
 echo
 if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
     cd /opt/inbox-zero || exit
