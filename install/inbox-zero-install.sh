@@ -42,6 +42,43 @@ msg_info "Installing Inbox Zero"
 mkdir -p /opt/inbox-zero
 cd /opt/inbox-zero || exit
 
+# ---------------------------------------------------------------------------------
+# Prerequisites Check
+# ---------------------------------------------------------------------------------
+echo ""
+echo -e "${INFO}${YW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
+echo -e "${INFO}${YW} PREREQUISITES INFORMATION${CL}"
+echo -e "${INFO}${YW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
+echo -e "${INFO}${YW} Inbox Zero requires OAuth credentials to function.${CL}"
+echo -e "${INFO}${YW} You will need to set up ONE of the following:${CL}"
+echo ""
+echo -e "${INFO}${GN} Option 1: Google OAuth (Recommended)${CL}"
+echo -e "${TAB}${GATEWAY}${BGN}https://console.cloud.google.com/${CL}"
+echo -e "${TAB}• Create a new project or select existing"
+echo -e "${TAB}• Enable Gmail API"
+echo -e "${TAB}• Create OAuth 2.0 credentials"
+echo -e "${TAB}• Add redirect URI: ${BGN}http://${IP}:3000/api/auth/callback/google${CL}"
+echo ""
+echo -e "${INFO}${GN} Option 2: Microsoft Azure AD${CL}"
+echo -e "${TAB}${GATEWAY}${BGN}https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade${CL}"
+echo -e "${TAB}• Register a new application"
+echo -e "${TAB}• Add redirect URI: ${BGN}http://${IP}:3000/api/auth/callback/azure-ad${CL}"
+echo ""
+echo -e "${INFO}${YW} Optional: AI Features (Ollama)${CL}"
+echo -e "${TAB}${GATEWAY}${BGN}https://ollama.ai/${CL}"
+echo -e "${TAB}• Install Ollama on a GPU-enabled host"
+echo -e "${TAB}• Set OLLAMA_HOST=0.0.0.0 in service config"
+echo -e "${TAB}• Pull a model: ${BGN}ollama pull llama3${CL}"
+echo ""
+echo -e "${INFO}${YW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
+echo ""
+read -r -p "${TAB3}Have you obtained OAuth credentials? (Installation will continue, but login will fail without them) <y/N> " prereq_prompt
+if [[ ! ${prereq_prompt,,} =~ ^(y|yes)$ ]]; then
+  echo -e "${INFO}${RD} Note: You can configure OAuth later by editing /opt/inbox-zero/.env${CL}"
+  echo -e "${INFO}${RD} The application will not be usable until OAuth is configured.${CL}"
+  sleep 3
+fi
+
 # Generate secure passwords
 POSTGRES_PASSWORD=$(openssl rand -base64 24)
 NEXTAUTH_SECRET=$(openssl rand -base64 32)
@@ -61,9 +98,17 @@ services:
       - "3000:3000"
     env_file: .env
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     # Map extra hosts if you need to reach the host via host.docker.internal
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -79,11 +124,22 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d inboxzero"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:alpine
     container_name: inbox-zero-redis
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
 volumes:
   postgres_data:
@@ -200,6 +256,20 @@ REQUIRED MANUAL STEPS:
 5. Access the application:
    http://<YOUR_CONTAINER_IP>:3000
 
+HEALTH MONITORING:
+Health checks are configured for all services:
+- Database: Validates PostgreSQL is ready
+- Redis: Validates Redis is responding
+- Web: Validates application is serving requests
+
+To check service health:
+  docker compose ps
+  
+To view detailed health status:
+  docker inspect inbox-zero --format='{{.State.Health.Status}}'
+  docker inspect inbox-zero-db --format='{{.State.Health.Status}}'
+  docker inspect inbox-zero-redis --format='{{.State.Health.Status}}'
+
 UPDATING:
 To update Inbox Zero to the latest version:
   cd /opt/inbox-zero
@@ -209,6 +279,9 @@ To update Inbox Zero to the latest version:
 LOGS:
 To view logs:
   docker compose logs -f web
+  
+To troubleshoot database issues:
+  docker compose logs db
 EOF
 
 msg_ok "Installed Inbox Zero Configuration"
@@ -239,8 +312,53 @@ read -r -p "${TAB3}Would you like to start the containers now? (Will fail login 
 echo
 if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
     cd /opt/inbox-zero || exit
+    msg_info "Starting containers (this may take a moment)..."
     $STD docker compose up -d
-    msg_ok "Started Inbox Zero"
+    
+    # Database connection validation
+    msg_info "Validating database connection..."
+    MAX_RETRIES=30
+    RETRY_COUNT=0
+    DB_READY=false
+    
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        if docker exec inbox-zero-db pg_isready -U postgres -d inboxzero >/dev/null 2>&1; then
+            DB_READY=true
+            break
+        fi
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        sleep 2
+    done
+    
+    if [ "$DB_READY" = true ]; then
+        msg_ok "Database connection validated"
+        
+        # Check container health status
+        msg_info "Checking service health..."
+        sleep 5  # Give services time to start
+        
+        WEB_STATUS=$(docker inspect --format='{{.State.Health.Status}}' inbox-zero 2>/dev/null || echo "no_health")
+        DB_STATUS=$(docker inspect --format='{{.State.Health.Status}}' inbox-zero-db 2>/dev/null || echo "no_health")
+        REDIS_STATUS=$(docker inspect --format='{{.State.Health.Status}}' inbox-zero-redis 2>/dev/null || echo "no_health")
+        
+        echo ""
+        echo -e "${INFO}${YW} Container Status:${CL}"
+        echo -e "${TAB}• Database: ${GN}${DB_STATUS}${CL}"
+        echo -e "${TAB}• Redis: ${GN}${REDIS_STATUS}${CL}"
+        echo -e "${TAB}• Web: ${GN}${WEB_STATUS}${CL}"
+        echo ""
+        
+        if [[ "$WEB_STATUS" == "starting" ]] || [[ "$WEB_STATUS" == "no_health" ]]; then
+            echo -e "${INFO}${YW} Note: Web service is starting. Health checks may take 30-60 seconds.${CL}"
+            echo -e "${INFO}${YW} Check status with: ${BGN}docker compose ps${CL}"
+        fi
+        
+        msg_ok "Started Inbox Zero"
+    else
+        msg_error "Database failed to become ready after $MAX_RETRIES attempts"
+        echo -e "${INFO}${RD} Check logs with: cd /opt/inbox-zero && docker compose logs db${CL}"
+        exit 1
+    fi
 else
     msg_info "Skipping start. Remember to configure .env first!"
 fi
