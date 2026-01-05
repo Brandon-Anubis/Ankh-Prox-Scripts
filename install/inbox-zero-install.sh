@@ -42,6 +42,11 @@ msg_info "Installing Inbox Zero"
 mkdir -p /opt/inbox-zero
 cd /opt/inbox-zero || exit
 
+# Generate secure passwords
+POSTGRES_PASSWORD=$(openssl rand -base64 24)
+NEXTAUTH_SECRET=$(openssl rand -base64 32)
+EMAIL_ENCRYPT_SALT=$(openssl rand -hex 16)
+
 # ---------------------------------------------------------------------------------
 # Generate Docker Compose
 # ---------------------------------------------------------------------------------
@@ -66,9 +71,10 @@ services:
   db:
     image: postgres:15-alpine
     container_name: inbox-zero-db
+    env_file: .env
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: inboxzero
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -94,12 +100,13 @@ cat <<EOF > .env
 NODE_ENV=production
 NEXT_PUBLIC_APP_URL=http://${IP}:3000
 NEXTAUTH_URL=http://${IP}:3000
-NEXTAUTH_SECRET=$(openssl rand -base64 32)
-EMAIL_ENCRYPT_SALT=$(openssl rand -hex 16)
+NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+EMAIL_ENCRYPT_SALT=${EMAIL_ENCRYPT_SALT}
 
 # Database & Redis (Internal Docker Network)
-DATABASE_URL=postgresql://postgres:password@db:5432/inboxzero
-DIRECT_URL=postgresql://postgres:password@db:5432/inboxzero
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/inboxzero
+DIRECT_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/inboxzero
 REDIS_URL=redis://redis:6379
 
 # ------------------------------------------------------------------------------
@@ -134,6 +141,29 @@ NEXT_PUBLIC_OLLAMA_MODEL=llama3
 
 # OpenAI (Optional fallback)
 # OPENAI_API_KEY=sk-...
+EOF
+
+# ---------------------------------------------------------------------------------
+# Save generated credentials
+# ---------------------------------------------------------------------------------
+cat <<EOF > ~/inbox-zero.creds
+Inbox Zero Credentials
+======================
+Generated on: $(date)
+
+PostgreSQL Password: ${POSTGRES_PASSWORD}
+NextAuth Secret: ${NEXTAUTH_SECRET}
+Email Encrypt Salt: ${EMAIL_ENCRYPT_SALT}
+
+Database Connection:
+  Host: localhost (inside container: db)
+  Port: 5432
+  Database: inboxzero
+  User: postgres
+  Password: ${POSTGRES_PASSWORD}
+
+These credentials have been automatically set in /opt/inbox-zero/.env
+Keep this file secure and delete after backing up elsewhere.
 EOF
 
 # ---------------------------------------------------------------------------------
@@ -187,6 +217,8 @@ msg_ok "Installed Inbox Zero Configuration"
 # Post-Install Instructions & Checks
 # ---------------------------------------------------------------------------------
 echo ""
+echo -e "${INFO}${YW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
+echo -e "${INFO}${YW} IMPORTANT: Credentials saved to ~/inbox-zero.creds${CL}"
 echo -e "${INFO}${YW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
 echo -e "${INFO}${YW} REQUIRED MANUAL STEPS:${CL}"
 echo -e "${INFO}${YW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
