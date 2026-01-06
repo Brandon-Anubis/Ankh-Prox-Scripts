@@ -5,7 +5,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-S
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/elie222/inbox-zero
 
-APP="Inbox Zero"
+APP="Inbox-Zero"
 var_tags="${var_tags:-email;ai;productivity}"
 var_cpu="${var_cpu:-4}"
 var_ram="${var_ram:-4096}"
