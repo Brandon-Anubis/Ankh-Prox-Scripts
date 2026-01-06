@@ -5,7 +5,22 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/elie222/inbox-zero
 
+# Debug: Check what we're working with
+echo "DEBUG: FUNCTIONS_FILE_PATH length: ${#FUNCTIONS_FILE_PATH}"
+echo "DEBUG: BASE_URL: ${BASE_URL:-NOT SET}"
+
+# Fallback if FUNCTIONS_FILE_PATH is not set or empty
+if [ -z "$FUNCTIONS_FILE_PATH" ]; then
+  echo "FUNCTIONS_FILE_PATH not set, fetching from GitHub..."
+  export BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main}"
+  FUNCTIONS_FILE_PATH="$(curl -fsSL "${BASE_URL}"/misc/install.func)"
+  echo "DEBUG: Fetched FUNCTIONS_FILE_PATH, length: ${#FUNCTIONS_FILE_PATH}"
+fi
+
+echo "DEBUG: About to source FUNCTIONS_FILE_PATH..."
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
+echo "DEBUG: Sourced successfully"
+
 color
 verb_ip6
 catch_errors
@@ -18,7 +33,7 @@ $STD apt-get install -y curl git mc
 msg_ok "Installed Dependencies"
 
 get_latest_release() {
-  curl -fsSL https://api.github.com/repos/$1/releases/latest | grep '"tag_name":' | cut -d'"' -f4
+  curl -fsSL https://api.github.com/repos/"$1"/releases/latest | grep '"tag_name":' | cut -d'"' -f4
 }
 
 DOCKER_LATEST_VERSION=$(get_latest_release "moby/moby")
@@ -33,9 +48,9 @@ msg_ok "Installed Docker $DOCKER_LATEST_VERSION"
 
 msg_info "Installing Docker Compose $DOCKER_COMPOSE_LATEST_VERSION"
 DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-mkdir -p $DOCKER_CONFIG/cli-plugins
-curl -fsSL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_LATEST_VERSION/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+mkdir -p "$DOCKER_CONFIG"/cli-plugins
+curl -fsSL https://github.com/docker/compose/releases/download/"$DOCKER_COMPOSE_LATEST_VERSION"/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+chmod +x "$DOCKER_CONFIG"/cli-plugins/docker-compose
 msg_ok "Installed Docker Compose $DOCKER_COMPOSE_LATEST_VERSION"
 
 msg_info "Installing Inbox Zero"
