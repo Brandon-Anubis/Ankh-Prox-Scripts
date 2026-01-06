@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/build.func)
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
 # Copyright (c) 2021-2025 tteck
 # Author: Brandon-Anubis (Adapted)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
