@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: tteck (tteckster) | MickLesk | michelroegl-brunner
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/branch/main/LICENSE
+# License: MIT | https://github.com/Brandon-Anubis/Ankh-Prox-Scripts/raw/main/LICENSE
 
 # ==============================================================================
 # BUILD.FUNC - LXC CONTAINER BUILD & CONFIGURATION
@@ -21,6 +21,14 @@
 #   - Requires core.func and error_handler.func to be loaded first
 #
 # ==============================================================================
+
+# ==============================================================================
+# GLOBAL CONFIGURATION
+# ==============================================================================
+
+# Base URL for all GitHub raw content fetches
+# This allows easy switching between forks/branches by changing a single variable
+export BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main}"
 
 # ==============================================================================
 # SECTION 1: INITIALIZATION & CORE VARIABLES
@@ -80,16 +88,16 @@ variables() {
   fi
 }
 
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func)
+source <(curl -fsSL ${BASE_URL}/misc/api.func)
 
 if command -v curl >/dev/null 2>&1; then
-  source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
-  source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/error_handler.func)
+  source <(curl -fsSL ${BASE_URL}/misc/core.func)
+  source <(curl -fsSL ${BASE_URL}/misc/error_handler.func)
   load_functions
   catch_errors
 elif command -v wget >/dev/null 2>&1; then
-  source <(wget -qO- https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
-  source <(wget -qO- https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/error_handler.func)
+  source <(wget -qO- ${BASE_URL}/misc/core.func)
+  source <(wget -qO- ${BASE_URL}/misc/error_handler.func)
   load_functions
   catch_errors
 fi
@@ -2630,7 +2638,7 @@ configure_ssh_settings() {
 # - Otherwise: shows update/setting menu and runs update_script with cleanup
 # ------------------------------------------------------------------------------
 start() {
-  source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/tools.func)
+  source <(curl -fsSL ${BASE_URL}/misc/tools.func)
   if command -v pveversion >/dev/null 2>&1; then
     install_script || return 0
     return 0
@@ -2758,9 +2766,9 @@ build_container() {
   TEMP_DIR=$(mktemp -d)
   pushd "$TEMP_DIR" >/dev/null
   if [ "$var_os" == "alpine" ]; then
-    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/alpine-install.func)"
+    export FUNCTIONS_FILE_PATH="$(curl -fsSL ${BASE_URL}/misc/alpine-install.func)"
   else
-    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/install.func)"
+    export FUNCTIONS_FILE_PATH="$(curl -fsSL ${BASE_URL}/misc/install.func)"
   fi
 
   # Core exports for install.func
@@ -3218,7 +3226,39 @@ EOF'
   set +Eeuo pipefail # Disable ALL error handling temporarily
   trap - ERR         # Remove ERR trap completely
 
-  lxc-attach -n "$CTID" -- bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/install/${var_install}.sh)"
+  lxc-attach -n "$CTID" \
+    -v FUNCTIONS_FILE_PATH \
+    -v DIAGNOSTICS \
+    -v RANDOM_UUID \
+    -v SESSION_ID \
+    -v CACHER \
+    -v CACHER_IP \
+    -v tz \
+    -v APPLICATION \
+    -v app \
+    -v PASSWORD \
+    -v VERBOSE \
+    -v SSH_ROOT \
+    -v SSH_AUTHORIZED_KEY \
+    -v CTID \
+    -v CTTYPE \
+    -v ENABLE_FUSE \
+    -v ENABLE_TUN \
+    -v PCT_OSTYPE \
+    -v PCT_OSVERSION \
+    -v PCT_DISK_SIZE \
+    -v IPV6_METHOD \
+    -v BUILD_LOG \
+    -v INSTALL_LOG \
+    -v dev_mode \
+    -v DEV_MODE_MOTD \
+    -v DEV_MODE_KEEP \
+    -v DEV_MODE_TRACE \
+    -v DEV_MODE_PAUSE \
+    -v DEV_MODE_BREAKPOINT \
+    -v DEV_MODE_LOGS \
+    -v DEV_MODE_DRYRUN \
+    -- bash -c "$(curl -fsSL ${BASE_URL}/install/${var_install}.sh)"
   local lxc_exit=$?
 
   set -Eeuo pipefail       # Re-enable error handling
@@ -3302,7 +3342,7 @@ EOF'
         if [[ "${DEV_MODE_MOTD:-false}" == "true" ]]; then
           echo -e "${TAB}${HOLD}${DGN}Setting up MOTD and SSH for debugging...${CL}"
           if pct exec "$CTID" -- bash -c "
-            source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/install.func)
+            source <(curl -fsSL ${BASE_URL}/misc/install.func)
             declare -f motd_ssh >/dev/null 2>&1 && motd_ssh || true
           " >/dev/null 2>&1; then
             local ct_ip=$(pct exec "$CTID" ip a s dev eth0 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1)
