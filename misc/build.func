@@ -3218,7 +3218,39 @@ EOF'
   set +Eeuo pipefail # Disable ALL error handling temporarily
   trap - ERR         # Remove ERR trap completely
 
-  lxc-attach -n "$CTID" -- bash -c "$(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/install/${var_install}.sh)"
+  lxc-attach -n "$CTID" \
+    -v FUNCTIONS_FILE_PATH \
+    -v DIAGNOSTICS \
+    -v RANDOM_UUID \
+    -v SESSION_ID \
+    -v CACHER \
+    -v CACHER_IP \
+    -v tz \
+    -v APPLICATION \
+    -v app \
+    -v PASSWORD \
+    -v VERBOSE \
+    -v SSH_ROOT \
+    -v SSH_AUTHORIZED_KEY \
+    -v CTID \
+    -v CTTYPE \
+    -v ENABLE_FUSE \
+    -v ENABLE_TUN \
+    -v PCT_OSTYPE \
+    -v PCT_OSVERSION \
+    -v PCT_DISK_SIZE \
+    -v IPV6_METHOD \
+    -v BUILD_LOG \
+    -v INSTALL_LOG \
+    -v dev_mode \
+    -v DEV_MODE_MOTD \
+    -v DEV_MODE_KEEP \
+    -v DEV_MODE_TRACE \
+    -v DEV_MODE_PAUSE \
+    -v DEV_MODE_BREAKPOINT \
+    -v DEV_MODE_LOGS \
+    -v DEV_MODE_DRYRUN \
+    -- bash -c "$(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/install/${var_install}.sh)"
   local lxc_exit=$?
 
   set -Eeuo pipefail       # Re-enable error handling
