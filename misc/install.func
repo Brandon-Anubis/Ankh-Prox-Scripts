@@ -24,6 +24,13 @@
 # ==============================================================================
 
 # ==============================================================================
+# GLOBAL CONFIGURATION
+# ==============================================================================
+
+# Base URL for all GitHub raw content fetches
+export BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main}"
+
+# ==============================================================================
 # SECTION 1: INITIALIZATION
 # ==============================================================================
 
@@ -32,8 +39,8 @@ if ! command -v curl >/dev/null 2>&1; then
   apt update >/dev/null 2>&1
   apt install -y curl >/dev/null 2>&1
 fi
-source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/core.func)
-source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/error_handler.func)
+source <(curl -fsSL ${BASE_URL}/misc/core.func)
+source <(curl -fsSL ${BASE_URL}/misc/error_handler.func)
 load_functions
 catch_errors
 
@@ -197,7 +204,7 @@ EOF
   rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
   msg_ok "Updated Container OS"
 
-  source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/tools.func)
+  source <(curl -fsSL ${BASE_URL}/misc/tools.func)
 }
 
 # ==============================================================================
@@ -267,7 +274,7 @@ EOF
     systemctl restart $(basename $(dirname $GETTY_OVERRIDE) | sed 's/\.d//')
     msg_ok "Customized Container"
   fi
-  echo "bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/ct/${app}.sh)\"" >/usr/bin/update
+  echo "bash -c \"\$(curl -fsSL ${BASE_URL}/ct/${app}.sh)\"" >/usr/bin/update
   chmod +x /usr/bin/update
 
   if [[ -n "${SSH_AUTHORIZED_KEY}" ]]; then

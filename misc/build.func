@@ -23,6 +23,14 @@
 # ==============================================================================
 
 # ==============================================================================
+# GLOBAL CONFIGURATION
+# ==============================================================================
+
+# Base URL for all GitHub raw content fetches
+# This allows easy switching between forks/branches by changing a single variable
+export BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main}"
+
+# ==============================================================================
 # SECTION 1: INITIALIZATION & CORE VARIABLES
 # ==============================================================================
 
@@ -80,16 +88,16 @@ variables() {
   fi
 }
 
-source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/api.func)
+source <(curl -fsSL ${BASE_URL}/misc/api.func)
 
 if command -v curl >/dev/null 2>&1; then
-  source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/core.func)
-  source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/error_handler.func)
+  source <(curl -fsSL ${BASE_URL}/misc/core.func)
+  source <(curl -fsSL ${BASE_URL}/misc/error_handler.func)
   load_functions
   catch_errors
 elif command -v wget >/dev/null 2>&1; then
-  source <(wget -qO- https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/core.func)
-  source <(wget -qO- https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/error_handler.func)
+  source <(wget -qO- ${BASE_URL}/misc/core.func)
+  source <(wget -qO- ${BASE_URL}/misc/error_handler.func)
   load_functions
   catch_errors
 fi
@@ -2630,7 +2638,7 @@ configure_ssh_settings() {
 # - Otherwise: shows update/setting menu and runs update_script with cleanup
 # ------------------------------------------------------------------------------
 start() {
-  source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/tools.func)
+  source <(curl -fsSL ${BASE_URL}/misc/tools.func)
   if command -v pveversion >/dev/null 2>&1; then
     install_script || return 0
     return 0
@@ -2758,9 +2766,9 @@ build_container() {
   TEMP_DIR=$(mktemp -d)
   pushd "$TEMP_DIR" >/dev/null
   if [ "$var_os" == "alpine" ]; then
-    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/alpine-install.func)"
+    export FUNCTIONS_FILE_PATH="$(curl -fsSL ${BASE_URL}/misc/alpine-install.func)"
   else
-    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/install.func)"
+    export FUNCTIONS_FILE_PATH="$(curl -fsSL ${BASE_URL}/misc/install.func)"
   fi
 
   # Core exports for install.func
@@ -3250,7 +3258,7 @@ EOF'
     -v DEV_MODE_BREAKPOINT \
     -v DEV_MODE_LOGS \
     -v DEV_MODE_DRYRUN \
-    -- bash -c "$(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/install/${var_install}.sh)"
+    -- bash -c "$(curl -fsSL ${BASE_URL}/install/${var_install}.sh)"
   local lxc_exit=$?
 
   set -Eeuo pipefail       # Re-enable error handling
@@ -3334,7 +3342,7 @@ EOF'
         if [[ "${DEV_MODE_MOTD:-false}" == "true" ]]; then
           echo -e "${TAB}${HOLD}${DGN}Setting up MOTD and SSH for debugging...${CL}"
           if pct exec "$CTID" -- bash -c "
-            source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/install.func)
+            source <(curl -fsSL ${BASE_URL}/misc/install.func)
             declare -f motd_ssh >/dev/null 2>&1 && motd_ssh || true
           " >/dev/null 2>&1; then
             local ct_ip=$(pct exec "$CTID" ip a s dev eth0 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1)

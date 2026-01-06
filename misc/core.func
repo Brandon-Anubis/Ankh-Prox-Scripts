@@ -20,6 +20,14 @@
 _CORE_FUNC_LOADED=1
 
 # ==============================================================================
+# GLOBAL CONFIGURATION
+# ==============================================================================
+
+# Base URL for all GitHub raw content fetches
+# This allows easy switching between forks/branches by changing a single variable
+export BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main}"
+
+# ==============================================================================
 # SECTION 1: INITIALIZATION & SETUP
 # ==============================================================================
 
@@ -420,7 +428,7 @@ silent() {
   if [[ $rc -ne 0 ]]; then
     # Source explain_exit_code if needed
     if ! declare -f explain_exit_code >/dev/null 2>&1; then
-      source <(curl -fsSL https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/misc/error_handler.func)
+      source <(curl -fsSL ${BASE_URL}/misc/error_handler.func)
     fi
 
     local explanation
@@ -685,7 +693,7 @@ exit_script() {
 get_header() {
   local app_name=$(echo "${APP,,}" | tr -d ' ')
   local app_type=${APP_TYPE:-ct} # Default to 'ct' if not set
-  local header_url="https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main/${app_type}/headers/${app_name}"
+  local header_url="${BASE_URL}/${app_type}/headers/${app_name}"
   local local_header_path="/usr/local/community-scripts/headers/${app_type}/${app_name}"
 
   mkdir -p "$(dirname "$local_header_path")"
