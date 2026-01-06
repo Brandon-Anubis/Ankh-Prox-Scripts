@@ -3227,6 +3227,7 @@ EOF'
   trap - ERR         # Remove ERR trap completely
 
   lxc-attach -n "$CTID" \
+    -v BASE_URL \
     -v FUNCTIONS_FILE_PATH \
     -v DIAGNOSTICS \
     -v RANDOM_UUID \
