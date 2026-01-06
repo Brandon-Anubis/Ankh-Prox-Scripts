@@ -1,0 +1,57 @@
+{
+  "name": "Inbox Zero",
+  "slug": "inbox-zero",
+  "categories": [
+    19,
+    20
+  ],
+  "date_created": "2025-01-06",
+  "type": "ct",
+  "updateable": true,
+  "privileged": false,
+  "interface_port": 3000,
+  "documentation": "https://github.com/elie222/inbox-zero",
+  "config_path": "/opt/inbox-zero/.env",
+  "website": "https://github.com/elie222/inbox-zero",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/inbox-zero.webp",
+  "description": "Inbox Zero is an email management tool that uses AI to help you clean up your inbox fast. It connects to Gmail and other email providers, offering features like bulk email unsubscribe, automated email responses, and AI-powered email categorization. With optional local AI support via Ollama, it can analyze and automate your email workflow while keeping your data private.",
+  "install_methods": [
+    {
+      "type": "default",
+      "script": "ct/inbox-zero.sh",
+      "resources": {
+        "cpu": 4,
+        "ram": 4096,
+        "hdd": 10,
+        "os": "debian",
+        "version": "13"
+      }
+    }
+  ],
+  "default_credentials": {
+    "username": null,
+    "password": null
+  },
+  "notes": [
+    {
+      "text": "OAuth credentials (Google or Microsoft Azure AD) are REQUIRED for login. Configure these in /opt/inbox-zero/.env before starting the containers.",
+      "type": "warning"
+    },
+    {
+      "text": "The application will not be usable until OAuth credentials are configured. See /opt/inbox-zero/README.txt for detailed setup instructions.",
+      "type": "warning"
+    },
+    {
+      "text": "For AI features, configure Ollama on a GPU-enabled host and set the OLLAMA_BASE_URL in /opt/inbox-zero/.env",
+      "type": "info"
+    },
+    {
+      "text": "The installation creates a Docker Compose stack with PostgreSQL, Redis, and the Inbox Zero web application.",
+      "type": "info"
+    },
+    {
+      "text": "Database credentials are auto-generated and saved to ~/inbox-zero.creds for reference.",
+      "type": "info"
+    }
+  ]
+}
