@@ -5,22 +5,13 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/elie222/inbox-zero
 
-# Debug: Check what we're working with
-echo "DEBUG: FUNCTIONS_FILE_PATH length: ${#FUNCTIONS_FILE_PATH}"
-echo "DEBUG: BASE_URL: ${BASE_URL:-NOT SET}"
-
 # Fallback if FUNCTIONS_FILE_PATH is not set or empty
 if [ -z "$FUNCTIONS_FILE_PATH" ]; then
-  echo "FUNCTIONS_FILE_PATH not set, fetching from GitHub..."
   export BASE_URL="${BASE_URL:-https://raw.githubusercontent.com/Brandon-Anubis/Ankh-Prox-Scripts/main}"
   FUNCTIONS_FILE_PATH="$(curl -fsSL "${BASE_URL}"/misc/install.func)"
-  echo "DEBUG: Fetched FUNCTIONS_FILE_PATH, length: ${#FUNCTIONS_FILE_PATH}"
 fi
 
-echo "DEBUG: About to source FUNCTIONS_FILE_PATH..."
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
-echo "DEBUG: Sourced successfully"
-
 color
 verb_ip6
 catch_errors
@@ -56,6 +47,9 @@ msg_ok "Installed Docker Compose $DOCKER_COMPOSE_LATEST_VERSION"
 msg_info "Installing Inbox Zero"
 mkdir -p /opt/inbox-zero
 cd /opt/inbox-zero || exit
+
+# Get container IP address
+IP=$(hostname -I | awk '{print $1}')
 
 # ---------------------------------------------------------------------------------
 # Prerequisites Check
