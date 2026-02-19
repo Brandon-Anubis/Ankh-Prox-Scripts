@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
@@ -71,7 +71,7 @@ function error_handler() {
   local line_number="$1"
   local command="$2"
   local error_message="${RD}[ERROR]${CL} in line ${RD}$line_number${CL}: exit code ${RD}$exit_code${CL}: while executing command ${YW}$command${CL}"
-  post_update_to_api "failed" "${command}"
+  post_update_to_api "failed" "${exit_code}"
   echo -e "\n$error_message\n"
   cleanup_vmid
 }
@@ -101,8 +101,15 @@ function cleanup_vmid() {
 }
 
 function cleanup() {
+  local exit_code=$?
   popd >/dev/null
-  post_update_to_api "done" "none"
+  if [[ "${POST_TO_API_DONE:-}" == "true" && "${POST_UPDATE_DONE:-}" != "true" ]]; then
+    if [[ $exit_code -eq 0 ]]; then
+      post_update_to_api "done" "none"
+    else
+      post_update_to_api "failed" "$exit_code"
+    fi
+  fi
   rm -rf $TEMP_DIR
 }
 
@@ -274,11 +281,11 @@ function get_mikrotik_version() {
     if [[ "$start_line" =~ ^[0-9]+$ ]]; then
       local line
       line=$(echo "$html" | tail -n +"$start_line" | grep -m 1 -E "c-(stable|longTerm|testing|development)-v|RouterOS [0-9]+\.[0-9]+" 2>/dev/null)
-      
+
       local version
       version=$(echo "$line" | sed -n 's/.*c-[^"]*-v\([0-9_.a-zA-Z-]\+\).*/\1/p' | tr '_' '.' 2>/dev/null)
       [ -z "$version" ] && version=$(echo "$line" | grep -oP 'RouterOS \K[0-9]+\.[0-9]+(\.[0-9]+)?' 2>/dev/null)
-      
+
       if [[ "$version" =~ ^[0-9]+\.[0-9]+ ]]; then
         echo "$version"
         return 0
@@ -566,6 +573,11 @@ zfspool)
   DISK_REF=""
   DISK_IMPORT="-format raw"
   ;;
+*)
+  DISK_EXT=""
+  DISK_REF=""
+  DISK_IMPORT="-format raw"
+  ;;
 esac
 
 DISK_VAR="vm-${VMID}-disk-0${DISK_EXT:-}"
@@ -611,7 +623,7 @@ DESCRIPTION=$(
 </div>
 EOF
 )
-qm set "$VMID" -description "$DESCRIPTION" >/dev/null
+qm set $VMID -description "$DESCRIPTION" >/dev/null
 if [ -n "$DISK_SIZE" ]; then
   msg_info "Resizing disk to $DISK_SIZE GB"
   qm resize $VMID scsi0 ${DISK_SIZE} >/dev/null
@@ -627,4 +639,4 @@ if [ "$START_VM" == "yes" ]; then
   msg_ok "Started Mikrotik RouterOS CHR VM"
 fi
 post_update_to_api "done" "none"
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"

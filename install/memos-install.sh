@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck
 # Co-Author: MickLesk (Canbiz)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
@@ -14,7 +14,7 @@ setting_up_container
 network_check
 update_os
 
-fetch_and_deploy_gh_release "memos" "usememos/memos" "prebuild" "latest" "/opt/memos" "memos*linux_amd64.tar.gz"
+fetch_and_deploy_gh_release "memos" "usememos/memos" "prebuild" "v0.25.3" "/opt/memos" "memos*linux_amd64.tar.gz"
 mkdir -p /opt/memos_data
 
 msg_info "Creating Service"

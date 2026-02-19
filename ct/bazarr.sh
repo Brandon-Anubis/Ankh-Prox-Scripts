@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
-# Copyright (c) 2021-2025 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck (tteckster)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://www.bazarr.media/
@@ -40,7 +40,7 @@ function update_script() {
     chmod 775 /opt/bazarr /var/lib/bazarr/
     # Always ensure venv exists
     if [[ ! -d /opt/bazarr/venv/ ]]; then
-      $STD uv venv /opt/bazarr/venv --python 3.12
+      $STD uv venv --clear /opt/bazarr/venv --python 3.12
     fi
     
     # Always check and fix service file if needed
@@ -63,7 +63,7 @@ start
 build_container
 description
 
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW} Access it using the following URL:${CL}"
 echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:6767${CL}"

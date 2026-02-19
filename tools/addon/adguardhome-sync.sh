@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: MickLesk (CanbiZ)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/bakito/adguardhome-sync
 
+if ! command -v curl &>/dev/null; then
+  printf "\r\e[2K%b" '\033[93m Setup Source \033[m' >&2
+  apt-get update >/dev/null 2>&1
+  apt-get install -y curl >/dev/null 2>&1
+fi
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/tools.func)
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/error_handler.func)
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
 
 # Enable error handling
 set -Eeuo pipefail
@@ -24,6 +30,7 @@ DEFAULT_PORT=8080
 
 # Initialize all core functions (colors, formatting, icons, STD mode)
 load_functions
+init_tool_telemetry "" "addon"
 
 # ==============================================================================
 # HEADER
@@ -111,7 +118,7 @@ function update() {
       systemctl start adguardhome-sync.service
     fi
     msg_ok "Started service"
-    msg_ok "Updated successfully"
+    msg_ok "Updated successfully!"
     exit
   fi
 }

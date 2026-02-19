@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: AlphaLawless
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/alexjustesen/speedtest-tracker
@@ -20,11 +20,10 @@ $STD apt install -y \
 setcap cap_net_raw+ep /bin/ping
 msg_ok "Installed Dependencies"
 
-PHP_VERSION="8.4" PHP_FPM="YES" PHP_MODULE="common,sqlite3,redis" setup_php
+PHP_VERSION="8.4" PHP_FPM="YES" setup_php
 setup_composer
 NODE_VERSION="22" setup_nodejs
-import_local_ip
-fetch_and_deploy_gh_release "speedtest-tracker" "alexjustesen/speedtest-tracker" "tarball" "latest" "/opt/speedtest-tracker"
+fetch_and_deploy_gh_release "speedtest-tracker" "alexjustesen/speedtest-tracker" "tarball"
 
 msg_info "Installing Speedtest CLI"
 setup_deb822_repo \

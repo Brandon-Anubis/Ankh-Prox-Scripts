@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck | Co-Author: havardthom | Co-Author: Slaviša Arežina (tremor021)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://openwebui.com/
@@ -14,7 +14,9 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt install -y ffmpeg
+$STD apt install -y \
+  ffmpeg \
+  zstd
 msg_ok "Installed Dependencies"
 
 setup_hwaccel
@@ -22,7 +24,7 @@ setup_hwaccel
 PYTHON_VERSION="3.12" setup_uv
 
 msg_info "Installing Open WebUI"
-$STD uv tool install --python 3.12 open-webui[all]
+$STD uv tool install --python 3.12 --constraint <(echo "numba>=0.60") open-webui[all]
 msg_ok "Installed Open WebUI"
 
 read -r -p "${TAB3}Would you like to add Ollama? <y/N> " prompt
@@ -69,9 +71,10 @@ EOF
   msg_ok "Installed Intel® oneAPI Base Toolkit"
 
   msg_info "Installing Ollama"
-  curl -fsSLO -C - https://ollama.com/download/ollama-linux-amd64.tgz
-  tar -C /usr -xzf ollama-linux-amd64.tgz
-  rm -rf ollama-linux-amd64.tgz
+  OLLAMA_RELEASE=$(curl -fsSL https://api.github.com/repos/ollama/ollama/releases/latest | grep "tag_name" | awk -F '"' '{print $4}')
+  curl -fsSLO -C - https://github.com/ollama/ollama/releases/download/${OLLAMA_RELEASE}/ollama-linux-amd64.tar.zst
+  tar --zstd -C /usr -xf ollama-linux-amd64.tar.zst
+  rm -rf ollama-linux-amd64.tar.zst
   cat <<EOF >/etc/systemd/system/ollama.service
 [Unit]
 Description=Ollama Service

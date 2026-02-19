@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: MickLesk (CanbiZ)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/clusterzx/paperless-ai
@@ -31,7 +31,7 @@ EOF
 msg_ok "Installed Python3"
 
 NODE_VERSION="22" setup_nodejs
-fetch_and_deploy_gh_release "paperless-ai" "clusterzx/paperless-ai"
+fetch_and_deploy_gh_release "paperless-ai" "clusterzx/paperless-ai" "tarball"
 
 msg_info "Setup Paperless-AI"
 cd /opt/paperless-ai

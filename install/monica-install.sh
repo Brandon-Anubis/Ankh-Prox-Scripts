@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: bvdberg01
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://www.monicahq.com/
@@ -13,7 +13,7 @@ setting_up_container
 network_check
 update_os
 
-PHP_VERSION="8.2" PHP_APACHE="YES" PHP_MODULE="dom,gmp,iconv,mysqli,pdo-mysql,redis,tokenizer" setup_php
+PHP_VERSION="8.2" PHP_APACHE="YES" PHP_MODULE="mysqli,pdo-mysql" setup_php
 setup_composer
 setup_mariadb
 MARIADB_DB_NAME="monica" MARIADB_DB_USER="monica" setup_mariadb_db
@@ -24,8 +24,8 @@ msg_info "Configuring monica"
 cd /opt/monica
 cp /opt/monica/.env.example /opt/monica/.env
 HASH_SALT=$(openssl rand -base64 32)
-sed -i -e "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USER}|" \
-  -e "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASS}|" \
+sed -i -e "s|^DB_USERNAME=.*|DB_USERNAME=${MARIADB_DB_USER}|" \
+  -e "s|^DB_PASSWORD=.*|DB_PASSWORD=${MARIADB_DB_PASS}|" \
   -e "s|^HASH_SALT=.*|HASH_SALT=${HASH_SALT}|" \
   /opt/monica/.env
 $STD composer install --no-dev -o --no-interaction

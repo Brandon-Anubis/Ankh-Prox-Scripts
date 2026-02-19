@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
-# Copyright (c) 2021-2025 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: MickLesk (Canbiz)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://www.usememos.com/
@@ -27,12 +27,12 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  if check_for_gh_release "memos" "usememos/memos"; then
+  if check_for_gh_release "memos" "usememos/memos" "v0.25.3"; then
     msg_info "Stopping service"
     systemctl stop memos
     msg_ok "Service stopped"
 
-    fetch_and_deploy_gh_release "memos" "usememos/memos" "prebuild" "latest" "/opt/memos" "memos*linux_amd64.tar.gz"
+    fetch_and_deploy_gh_release "memos" "usememos/memos" "prebuild" "v0.25.3" "/opt/memos" "memos*linux_amd64.tar.gz"
 
     msg_info "Starting service"
     systemctl start memos
@@ -46,7 +46,7 @@ start
 build_container
 description
 
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW} Access it using the following URL:${CL}"
 echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:9030${CL}"

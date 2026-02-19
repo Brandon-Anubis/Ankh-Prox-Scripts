@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
-# Copyright (c) 2021-2025 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck (tteckster)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://www.plex.tv/
@@ -29,10 +29,9 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  UPD=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "SUPPORT" --radiolist --cancel-button Exit-Script "Spacebar = Select \nplexupdate info >> https://github.com/mrworf/plexupdate" 10 59 2 \
-    "1" "Update LXC" ON \
-    "2" "Install plexupdate" OFF \
-    3>&1 1>&2 2>&3)
+  UPD=$(msg_menu "Plex Update Options" \
+    "1" "Update LXC" \
+    "2" "Install plexupdate")
   if [ "$UPD" == "1" ]; then
     msg_info "Updating ${APP} LXC"
     $STD apt update
@@ -53,7 +52,7 @@ start
 build_container
 description
 
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW} Access it using the following URL:${CL}"
 echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:32400/web${CL}"

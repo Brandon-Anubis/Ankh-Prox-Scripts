@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: MickLesk (Canbiz)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://healthchecks.io/
@@ -43,7 +43,7 @@ ADMIN_PASSWORD="$PG_DB_PASS"
 } >>~/healthchecks.creds
 msg_ok "Set up Keys"
 
-fetch_and_deploy_gh_release "healthchecks" "healthchecks/healthchecks"
+fetch_and_deploy_gh_release "healthchecks" "healthchecks/healthchecks" "tarball"
 
 msg_info "Installing Healthchecks (venv)"
 cd /opt/healthchecks
@@ -54,7 +54,6 @@ $STD pip install --upgrade pip wheel
 $STD pip install gunicorn -r requirements.txt
 msg_ok "Installed Python packages"
 
-LOCAL_IP=$(hostname -I | awk '{print $1}')
 cat <<EOF >/opt/healthchecks/hc/local_settings.py
 DEBUG = False
 
@@ -109,7 +108,7 @@ ${LOCAL_IP} {
 EOF
 msg_ok "Configured Caddy"
 
-msg_info "Creating systemd service"
+msg_info "Creating systemd services"
 cat <<EOF >/etc/systemd/system/healthchecks.service
 [Unit]
 Description=Healthchecks Service
@@ -124,9 +123,23 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-systemctl enable -q --now healthchecks caddy
+cat <<EOF >/etc/systemd/system/healthchecks-sendalerts.service
+[Unit]
+Description=Healthchecks Sendalerts Service
+After=network.target postgresql.service healthchecks.service
+
+[Service]
+WorkingDirectory=/opt/healthchecks/
+ExecStart=/opt/healthchecks/venv/bin/python manage.py sendalerts
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable -q --now healthchecks healthchecks-sendalerts caddy
 systemctl reload caddy
-msg_ok "Created Service"
+msg_ok "Created Services"
 
 motd_ssh
 customize
